@@ -1,36 +1,61 @@
-# FoodVision landing-page integration
+# FoodVision access workflow
 
-## Request review flow
+## What happens
 
-Landing-page submissions call the Vercel function at /api/request-access. The function validates the form and sends it to Google Apps Script. Apps Script appends a Pending row to the restricted Access Requests sheet. The business team reviews the row and records Approved or Denied, reviewer, and notes.
+1. An applicant submits the Request Access form on the landing page.
+2. The request appears as Pending in the private Access Requests Google Sheet.
+3. A business team member checks the applicant's name, work email, and company.
+4. The reviewer selects the row and uses FoodVision Business Approval > Approve selected request or Deny selected request.
+5. Approval is saved in the dashboard system using the applicant's exact work email.
+6. For an approved request, Google Apps Script emails the applicant a direct dashboard login link.
+7. The applicant chooses Continue with Google and uses the same approved email.
+8. FoodVision matches the verified Google email to the approval and opens the company dashboard.
+9. If the applicant signed in before approval, the account stays pending. Approval activates that existing account, and the next sign-in opens the dashboard.
 
-The Sheet is the team's manual review queue. It does not create a dashboard account.
+The business team does not need to open PostgreSQL or edit account records manually.
 
-## Connect the Google Sheet
+## Google Sheet setup
 
-1. Create a Google spreadsheet for FoodVision access requests. Give access only to the business reviewers.
-2. Open Extensions > Apps Script and paste the contents of apps-script/Code.gs.
-3. In Apps Script Project Settings > Script Properties, add:
-   - FOODVISION_SHEET_ID: the spreadsheet ID from its URL.
-   - FOODVISION_SCRIPT_TOKEN: a long random secret.
-4. Deploy the Apps Script as a Web app, executing as the deploying account and allowing access to anyone. The secret token is checked before any row is written.
-5. In the Vercel project settings, add:
-   - GOOGLE_SCRIPT_URL: the deployed Apps Script URL ending in /exec.
-   - GOOGLE_SCRIPT_TOKEN: the same random token.
-6. Redeploy the landing page. Submit a real request and confirm a Pending row appears before telling applicants the form is live.
+Open the Access Requests spreadsheet, then open Extensions > Apps Script and replace Code.gs with the repository file at apps-script/Code.gs.
 
-Never put either Google integration setting into VITE_ variables or browser code.
+In Apps Script Project Settings > Script Properties, keep the existing request-form settings:
 
-## Connect the Login button
+- FOODVISION_SHEET_ID: the spreadsheet ID from its URL.
+- FOODVISION_SCRIPT_TOKEN: the secret shared with the Vercel landing-page project.
 
-Set the Vercel project environment variable VITE_DASHBOARD_URL to the public dashboard origin, for example https://foodvision-cambodia-internship.onrender.com. The desktop and mobile Log in links then open that dashboard's /login page. Set the value to the real deployed origin before deploying this landing-page change. If the Render service URL differs, use the actual URL.
+Add these dashboard approval settings:
 
-## Approve a dashboard account
+- FOODVISION_BUSINESS_API_URL: https://foodvision-cambodia-internship.onrender.com/api/business/access-request
+- FOODVISION_BUSINESS_TOKEN: the same value as BUSINESS_APPROVAL_TOKEN in the Render dashboard service.
+- FOODVISION_DASHBOARD_LOGIN_URL: https://foodvision-cambodia-internship.onrender.com/login
 
-After the business team marks a request Approved, send the applicant the dashboard login URL and ask them to sign in with Google using the same email from the Sheet. Google creates a pending account with a verified email. The BI team then checks the matching email and company in the dashboard database, sets the user's company, and activates the account. The account stays blocked until that manual step. Denied requests are never activated.
+Save the script and reload the spreadsheet. A menu named FoodVision Business Approval will appear. The first approval asks the reviewer to authorize access to the Sheet, external dashboard request, and email sending.
 
-The dashboard's production email/password verification is not configured yet. Google sign-in is the usable verified sign-in method until an email sender is configured. Refer to the dashboard project's README for the account activation SQL.
+If the Apps Script is not attached to the spreadsheet, open the spreadsheet first and create it from Extensions > Apps Script. A standalone script cannot add the approval menu to the Sheet.
 
-## Deployment
+## Render setup
 
-This ZIP contains source changes only. Import or copy the project into the teammate's Git repository, set the Vercel environment variables above, and deploy a preview first. Confirm the request arrives in Sheets and that Log in opens the dashboard before promoting the landing-page deployment.
+The dashboard service needs the BUSINESS_APPROVAL_TOKEN environment variable. The value must be a long random secret and must exactly match FOODVISION_BUSINESS_TOKEN in Apps Script.
+
+The dashboard creates the access_requests table automatically when it starts after deployment. Each row stores the applicant, company, plan, business need, review status, and the linked dashboard user ID.
+
+## Landing-page setup
+
+The landing page sends new requests to Apps Script through its Vercel function. Keep these Vercel environment variables:
+
+- GOOGLE_SCRIPT_URL: the Apps Script web-app URL ending in /exec.
+- GOOGLE_SCRIPT_TOKEN: the same value as FOODVISION_SCRIPT_TOKEN.
+- VITE_DASHBOARD_URL: https://foodvision-cambodia-internship.onrender.com
+
+The dashboard address opens /login directly, and the landing page Login links should use that same dashboard address.
+
+## Business review steps
+
+1. Open the Access Requests sheet.
+2. Confirm the work email belongs to the company being reviewed.
+3. Select any cell in the applicant's row.
+4. Choose FoodVision Business Approval from the Sheet menu.
+5. Choose Approve selected request or Deny selected request.
+6. Confirm the decision.
+
+Approval emails the direct login link. Denial blocks an existing account with that email and records the denied decision for future sign-ins.
