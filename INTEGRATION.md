@@ -7,7 +7,7 @@
 3. A business team member checks the applicant's name, work email, and company.
 4. The reviewer selects the row and uses FoodVision Business Approval > Approve selected request or Deny selected request.
 5. Approval is saved in the dashboard system using the applicant's exact work email.
-6. For an approved request, Google Apps Script emails the applicant a direct dashboard login link.
+6. For an approved request, the business team manually emails the applicant the direct dashboard login link.
 7. The applicant chooses Continue with Google and uses the same approved email.
 8. FoodVision matches the verified Google email to the approval and opens the company dashboard.
 9. If the applicant signed in before approval, the account stays pending. Approval activates that existing account, and the next sign-in opens the dashboard.
@@ -30,7 +30,9 @@ Add these dashboard approval settings:
 - FOODVISION_DASHBOARD_LOGIN_URL: https://foodvision-cambodia-internship.onrender.com/login
 - FOODVISION_REVIEWER_NAME: optional display name such as FoodVision Business Team.
 
-Save the script and reload the spreadsheet. A menu named FoodVision Business Approval will appear. The first approval asks the reviewer to authorize access to the Sheet, external dashboard request, and email sending.
+Save the script and reload the spreadsheet. A menu named FoodVision Business Approval will appear. The first approval asks the reviewer to authorize access to the Sheet and the dashboard connection.
+
+If the authorization prompt does not appear, open Apps Script Project Settings, enable Show appsscript.json manifest file in editor, and replace that manifest with apps-script/appsscript.json from this repository. Save, run approveSelectedRequest once from the editor, and grant the requested spreadsheet and external connection permissions.
 
 If the Apps Script is not attached to the spreadsheet, open the spreadsheet first and create it from Extensions > Apps Script. A standalone script cannot add the approval menu to the Sheet.
 
@@ -59,4 +61,4 @@ The dashboard address opens /login directly, and the landing page Login links sh
 5. Choose Approve selected request or Deny selected request.
 6. Confirm the decision.
 
-Approval emails the direct login link. Denial blocks an existing account with that email and records the denied decision for future sign-ins.
+After approval, the business team manually sends https://foodvision-cambodia-internship.onrender.com/login to the applicant. Denial blocks an existing account with that email and records the denied decision for future sign-ins.

@@ -19,10 +19,12 @@ function onOpen() {
 }
 
 function approveSelectedRequest() {
+  ScriptApp.requireAllScopes(ScriptApp.AuthMode.FULL);
   handleAccessDecision_("approved");
 }
 
 function denySelectedRequest() {
+  ScriptApp.requireAllScopes(ScriptApp.AuthMode.FULL);
   handleAccessDecision_("denied");
 }
 
@@ -82,22 +84,15 @@ function handleAccessDecision_(decision) {
     sheet.getRange(row, 8).setValue(reviewer);
 
     if (decision === "approved") {
-      let invitationSent = true;
-      try {
-        sendDashboardInvitation_(request);
-      } catch (emailError) {
-        invitationSent = false;
-        console.error(emailError);
-      }
-
       const accountMessage = result.account_activated
         ? "The existing dashboard account was activated."
         : "The approval was saved and will activate when this email signs in.";
 
       ui.alert(
-        invitationSent
-          ? accountMessage + " The dashboard invitation was emailed."
-          : accountMessage + " The invitation email could not be sent; send the dashboard login link manually."
+        accountMessage +
+          " The business team can now send the dashboard login link manually to " +
+          request.email +
+          "."
       );
       return;
     }
@@ -143,47 +138,6 @@ function sendAccessRequest_(payload) {
   }
 
   return body;
-}
-
-function sendDashboardInvitation_(request) {
-  const loginUrl = PropertiesService.getScriptProperties()
-    .getProperty("FOODVISION_DASHBOARD_LOGIN_URL");
-
-  if (!loginUrl) {
-    throw new Error("FOODVISION_DASHBOARD_LOGIN_URL is not configured.");
-  }
-
-  const greeting = request.fullName ? "Hello " + request.fullName + "," : "Hello,";
-  const subject = "Your FoodVision dashboard access is approved";
-  const plainBody = [
-    greeting,
-    "",
-    "Your FoodVision access request for " + (request.company || "your company") + " has been approved.",
-    "Open the dashboard and choose Continue with Google:",
-    loginUrl,
-    "",
-    "Use the same Google email address that was approved: " + request.email,
-    "",
-    "FoodVision Business Team",
-  ].join("\n");
-
-  const htmlBody =
-    "<p>" + escapeHtml_(greeting) + "</p>" +
-    "<p>Your FoodVision access request for <strong>" +
-    escapeHtml_(request.company || "your company") +
-    "</strong> has been approved.</p>" +
-    '<p><a href="' + escapeHtml_(loginUrl) +
-    '">Open the FoodVision dashboard</a> and choose <strong>Continue with Google</strong>.</p>' +
-    "<p>Use the same Google email address that was approved: <strong>" +
-    escapeHtml_(request.email) + "</strong></p>" +
-    "<p>FoodVision Business Team</p>";
-
-  MailApp.sendEmail({
-    to: request.email,
-    subject: subject,
-    body: plainBody,
-    htmlBody: htmlBody,
-  });
 }
 
 function doPost(event) {
@@ -259,15 +213,6 @@ function doPost(event) {
 
 function clean(value, maxLength) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
-}
-
-function escapeHtml_(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
 }
 
 function jsonResponse(payload) {
