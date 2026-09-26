@@ -63,7 +63,7 @@ function handleAccessDecision_(decision) {
   }
 
   try {
-    const reviewer = Session.getActiveUser().getEmail() || "Business team";
+    const reviewer = PropertiesService.getScriptProperties().getProperty("FOODVISION_REVIEWER_NAME") || "Business team";
     const result = sendAccessRequest_({
       email: request.email,
       status: decision,

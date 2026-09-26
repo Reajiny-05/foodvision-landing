@@ -28,6 +28,7 @@ Add these dashboard approval settings:
 - FOODVISION_BUSINESS_API_URL: https://foodvision-cambodia-internship.onrender.com/api/business/access-request
 - FOODVISION_BUSINESS_TOKEN: the same value as BUSINESS_APPROVAL_TOKEN in the Render dashboard service.
 - FOODVISION_DASHBOARD_LOGIN_URL: https://foodvision-cambodia-internship.onrender.com/login
+- FOODVISION_REVIEWER_NAME: optional display name such as FoodVision Business Team.
 
 Save the script and reload the spreadsheet. A menu named FoodVision Business Approval will appear. The first approval asks the reviewer to authorize access to the Sheet, external dashboard request, and email sending.
 
